@@ -31,7 +31,7 @@ def notification(text, *silence):
     @type silence: bool
     """
     scriptname = xbmcaddon.Addon().getAddonInfo('name')
-    simul = 'XBMC' not in sys.executable
+    simul = 'Kodi' not in sys.executable
     if not simul:
         text = text.encode('utf-8')
         info(text)
@@ -46,28 +46,28 @@ def notification(text, *silence):
             else:
                 dialog.notification(scriptname, text, smallicon, 1000, True)
     else:
-        print text
+        print(text)
 
 
 def debug(txt):
     scriptname = xbmcaddon.Addon().getAddonInfo('name')
-    simul = 'XBMC' not in sys.executable
+    simul = 'Kodi' not in sys.executable
     if isinstance(txt, str):
         txt = txt.decode("utf-8")
     message = u"### [%s] - %s" % (scriptname, txt)
     if not simul:
-        xbmc.log(msg=message.encode("utf-8"), level=xbmc.LOGDEBUG)
+        xbmc.log(msg=message, level=xbmc.LOGDEBUG)
     else:
-        print message
+        print(message)
 
 
 def info(txt):
     scriptname = xbmcaddon.Addon().getAddonInfo('name')
-    simul = 'XBMC' not in sys.executable
+    simul = 'Kodi' not in sys.executable
     if isinstance(txt, str):
-        txt = txt.decode("utf-8")
+        txt = txt
     message = u"### [%s] - %s" % (scriptname, txt)
     if not simul:
-        xbmc.log(msg=message.encode("utf-8"), level=xbmc.LOGNOTICE)
+        xbmc.log(msg=message, level=xbmc.LOGINFO)
     else:
-        print message
+        print(message)

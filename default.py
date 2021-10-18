@@ -22,7 +22,7 @@ import mmap
 import time
 import datetime
 import re
-from _winreg import *
+from winreg import *
 import subprocess
 from operator import itemgetter
 import ctypes
@@ -31,7 +31,7 @@ from xml.etree import cElementTree as ET
 from collections import namedtuple, deque
 from ctypes import wintypes
 # Modules XBMC
-simul = 'XBMC' not in sys.executable
+simul = 'Kodi' not in sys.executable
 if simul:
     import xbmcsim as xbmc
 else:
@@ -58,7 +58,7 @@ __language__ = None
 
 if not simul:
     __addon__ = xbmcaddon.Addon()
-    __cwd__ = xbmc.translatePath(__addon__.getAddonInfo('path')).decode('utf-8')
+    __cwd__ = xbmc.translatePath(__addon__.getAddonInfo('path'))
     __scriptname__ = __addon__.getAddonInfo('name')
     __version__ = str(__addon__.getAddonInfo('version'))
     __settings__ = xbmcaddon.Addon("script.ambibox")
@@ -83,10 +83,10 @@ if not simul:
 def start_debugger(remote=False):
     if remote:
         if xbmcvfs.exists(
-                r'C:\\Users\\Ken User\\AppData\\Roaming\\XBMC\\addons\\script.ambibox\\resources\\lib\\'
+                r'C:\\Users\\Ken User\\AppData\\Roaming\\Kodi\\addons\\script.ambibox\\resources\\lib\\'
                 r'pycharm-debug.py3k\\'):
             sys.path.append(
-                r'C:\\Users\\Ken User\\AppData\\Roaming\\XBMC\\addons\\script.ambibox\\resources\\lib\\'
+                r'C:\\Users\\Ken User\\AppData\\Roaming\\Kodi\\addons\\script.ambibox\\resources\\lib\\'
                 r'pycharm-debug.py3k\\')
             import pydevd
             pydevd.settrace('192.168.1.103', port=51234, stdoutToServer=True, stderrToServer=True, suspend=False)
@@ -189,12 +189,17 @@ class XbmcAmbibox(AmbiBox):
                     pname = QueryValueEx(key, 'ProfileName_%s' % str(i))
                     self.profiles.append(str(pname[0]))
                 CloseKey(aReg)
-            except WindowsError or EnvironmentError, e:
+            except WindowsError as e:
                 info("Error reading profiles from registry")
                 if hasattr(e, 'message'):
                     info(str(e.message))
                 return
-            except Exception, e:
+            except EnvironmentError as e:
+                info("Error reading profiles from registry")
+                if hasattr(e, 'message'):
+                    info(str(e.message))
+                return
+            except Exception as e:
                 info("Other error reading profiles from registry")
                 if hasattr(e, 'message'):
                     info(str(e.message))
@@ -367,7 +372,7 @@ class ScriptSettings(object):
         settinglistfloat = ['throttle', 'delay']
 
         for s in settingliststr:
-            self.settings[s] = str(__settings__.getSetting(s)).decode('utf-8')
+            self.settings[s] = str(__settings__.getSetting(s))
         for s in settinglistint:
             try:
                 self.settings[s] = int(__settings__.getSetting(s))
@@ -465,7 +470,7 @@ class ScriptSettings(object):
                 reg_pfl_names.append(str(pname[0]))
                 try:
                     key = OpenKey(aReg, r'Software\Server IR\Backlight\Profiles\%s' % str(pname[0]))
-                except Exception, e:
+                except Exception as e:
                     info('Error opening registry key for profile: %s' % str(pname[0]))
                     continue
                 backlight_plugin_name = QueryValueEx(key, 'BacklightPluginName')
@@ -481,12 +486,17 @@ class ScriptSettings(object):
                     else:
                         info('Profile %s found however, it is incorrectly configured for XBMCDirect' % pname[0])
             CloseKey(aReg)
-        except WindowsError or EnvironmentError, e:
+        except WindowsError as e:
             info("Error reading profile types from registry")
             if hasattr(e, 'message'):
                 info(str(e.message))
             return
-        except Exception, e:
+        except EnvironmentError as e:
+            info("Error reading profile types from registry")
+            if hasattr(e, 'message'):
+                info(str(e.message))
+            return
+        except Exception as e:
             info("Other error reading profile types from registry")
             if hasattr(e, 'message'):
                 info(str(e.message))
@@ -912,7 +922,7 @@ class XbmcMonitor(xbmc.Monitor):
             info('Screensaver started: LEDs off')
 
     def onSettingsChanged(self):
-        if xbmc.abortRequested or refresh_settings is False:
+        if xbmc.Monitor.abortRequested or refresh_settings is False:
             return
         info('Settings change detected')
         xbmc.sleep(250)
@@ -1053,7 +1063,7 @@ class XBMCD(object):
             self.inDataMap = mmap.mmap(0, self.mmap_length + 11, 'AmbiBox_XBMC_SharedMemory', mmap.ACCESS_WRITE)
             if simul:
                 self.inDataMap[0] = chr(248)
-        except Exception, e:
+        except Exception as e:
             info('Error creating connection to Ambibox Windows')
             if hasattr(e, 'message'):
                 info(str(e.message))
@@ -1425,7 +1435,7 @@ def simulate():
     xd.start()
     time.sleep(10)
     xd.stop()
-    print 'Done'
+    print('Done')
 
 
 class TestCriteria(object):
@@ -1667,7 +1677,7 @@ def monitor_onoff():
         else:
             if success is True:
                 info('Monitor for on/off hotkeys started thread: %s' % str(threading.current_thread().ident))
-    while not xbmc.abortRequested and not killonoffmonitor and success:
+    while not xbmc.Monitor.abortRequested and not killonoffmonitor and success:
         try:
             msg = ctypes.wintypes.MSG()
             if ctypes.windll.user32.PeekMessageA(ctypes.byref(msg), None, 0, 0, 1) != 0:
@@ -1771,7 +1781,7 @@ def main():
     monitor = XbmcMonitor()
     chk = 13.0 <= xbmc_version < 13.11
     count = 0
-    while not xbmc.abortRequested:
+    while not xbmc.Monitor.abortRequested:
         if gplayer is None:
             if ambibox.connect() == 0:
                 notification(__language__(32030))  # @[Connected to AmbiBox]
